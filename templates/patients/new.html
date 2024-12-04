@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">إضافة مريض جديد</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('new_patient') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="name" class="form-label">الاسم الكامل</label>
+                                {{ form.name(class="form-control", placeholder="أدخل الاسم الكامل") }}
+                                {% if form.name.errors %}
+                                    {% for error in form.name.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="birth_date" class="form-label">تاريخ الميلاد</label>
+                                {{ form.birth_date(class="form-control", type="date") }}
+                                {% if form.birth_date.errors %}
+                                    {% for error in form.birth_date.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label">رقم الهاتف</label>
+                                {{ form.phone(class="form-control", placeholder="أدخل رقم الهاتف") }}
+                                {% if form.phone.errors %}
+                                    {% for error in form.phone.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="email" class="form-label">البريد الإلكتروني</label>
+                                {{ form.email(class="form-control", placeholder="أدخل البريد الإلكتروني") }}
+                                {% if form.email.errors %}
+                                    {% for error in form.email.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="address" class="form-label">العنوان</label>
+                                {{ form.address(class="form-control", rows="3", placeholder="أدخل العنوان") }}
+                                {% if form.address.errors %}
+                                    {% for error in form.address.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="medical_history" class="form-label">التاريخ الطبي</label>
+                                {{ form.medical_history(class="form-control", rows="4", placeholder="أدخل التاريخ الطبي") }}
+                                {% if form.medical_history.errors %}
+                                    {% for error in form.medical_history.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col">
+                                {{ form.submit(class="btn btn-primary") }}
+                                <a href="{{ url_for('patients') }}" class="btn btn-secondary">إلغاء</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

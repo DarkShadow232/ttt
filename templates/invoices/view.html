@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h2>تفاصيل الفاتورة #{{ invoice.id }}</h2>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{{ url_for('print_invoice', id=invoice.id) }}" class="btn btn-secondary" target="_blank">
+                <i class="bi bi-printer"></i> طباعة
+            </a>
+            <a href="{{ url_for('edit_invoice', id=invoice.id) }}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> تعديل
+            </a>
+            {% if invoice.status != 'paid' %}
+            <button class="btn btn-success" onclick="recordPayment('{{ invoice.id }}')">
+                <i class="bi bi-cash"></i> تسجيل دفعة
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- معلومات الفاتورة -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">معلومات الفاتورة</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>رقم الفاتورة:</strong> {{ invoice.id }}</p>
+                            <p><strong>التاريخ:</strong> {{ invoice.created_at.strftime('%Y-%m-%d') }}</p>
+                            <p><strong>الحالة:</strong>
+                                {% if invoice.status == 'pending' %}
+                                    <span class="badge bg-danger">غير مدفوع</span>
+                                {% elif invoice.status == 'partially_paid' %}
+                                    <span class="badge bg-warning">مدفوع جزئياً</span>
+                                {% else %}
+                                    <span class="badge bg-success">مدفوع</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>المبلغ:</strong> {{ "%.2f"|format(invoice.amount) }} ريال</p>
+                            <p><strong>الخصم:</strong> {{ "%.2f"|format(invoice.discount) }} ريال</p>
+                            <p><strong>المتبقي:</strong> {{ "%.2f"|format(invoice.remaining_amount) }} ريال</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- معلومات المريض -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">معلومات المريض</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>اسم المريض:</strong> 
+                                <a href="{{ url_for('view_patient', id=invoice.patient.id) }}">
+                                    {{ invoice.patient.name }}
+                                </a>
+                            </p>
+                            <p><strong>رقم الهوية:</strong> {{ invoice.patient.id_number }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>رقم الهاتف:</strong> {{ invoice.patient.phone }}</p>
+                            <p><strong>العمر:</strong> {{ invoice.patient.age }} سنة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- معلومات الفحص -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">معلومات الفحص</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>نوع الفحص:</strong> {{ examination_types[invoice.examination.examination_type] }}</p>
+                            <p><strong>تاريخ الفحص:</strong> {{ invoice.examination.created_at.strftime('%Y-%m-%d') }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>الطبيب المعالج:</strong> {{ invoice.examination.doctor.name }}</p>
+                            {% if invoice.examination.result %}
+                            <p><strong>النتيجة:</strong> {{ invoice.examination.result }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if invoice.examination.recommendations %}
+                    <div class="mt-3">
+                        <strong>التوصيات:</strong>
+                        <p>{{ invoice.examination.recommendations }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- سجل المدفوعات -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">سجل المدفوعات</h5>
+                </div>
+                <div class="card-body">
+                    {% if invoice.payments %}
+                        {% for payment in invoice.payments %}
+                        <div class="border-bottom mb-3 pb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>{{ "%.2f"|format(payment.amount) }} ريال</span>
+                                <small class="text-muted">{{ payment.created_at.strftime('%Y-%m-%d') }}</small>
+                            </div>
+                            <div class="small text-muted">
+                                <span>{{ payment.payment_method }}</span>
+                                {% if payment.reference_number %}
+                                <span> - {{ payment.reference_number }}</span>
+                                {% endif %}
+                            </div>
+                            {% if payment.notes %}
+                            <div class="small mt-1">{{ payment.notes }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">لا توجد مدفوعات مسجلة</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة تسجيل الدفع -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تسجيل دفعة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="paymentForm">
+                    <input type="hidden" id="invoice_id" name="invoice_id">
+                    <div class="mb-3">
+                        <label class="form-label">المبلغ</label>
+                        <input type="number" class="form-control" id="payment_amount" name="amount" 
+                               step="0.01" required min="0" max="{{ invoice.remaining_amount }}">
+                        <div class="form-text">المبلغ المتبقي: {{ "%.2f"|format(invoice.remaining_amount) }} ريال</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">طريقة الدفع</label>
+                        <select class="form-select" name="payment_method" required>
+                            <option value="cash">نقداً</option>
+                            <option value="card">بطاقة بنكية</option>
+                            <option value="transfer">تحويل بنكي</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">رقم مرجعي (اختياري)</label>
+                        <input type="text" class="form-control" name="reference_number">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">ملاحظات</label>
+                        <textarea class="form-control" name="notes" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="submitPayment()">تسجيل الدفع</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function recordPayment(invoiceId) {
+    document.getElementById('invoice_id').value = invoiceId;
+    new bootstrap.Modal(document.getElementById('paymentModal')).show();
+}
+
+function submitPayment() {
+    const form = document.getElementById('paymentForm');
+    const formData = new FormData(form);
+    const invoiceId = formData.get('invoice_id');
+
+    fetch(`/invoices/${invoiceId}/payment`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'حدث خطأ أثناء تسجيل الدفع');
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>السجل الطبي - {{ patient.name }}</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('examinations.new', patient_id=patient.id) }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> إضافة فحص جديد
+            </a>
+            <button onclick="printRecord()" class="btn btn-secondary">
+                <i class="fas fa-print"></i> طباعة
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">معلومات المريض</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th>رقم الملف:</th>
+                            <td>{{ patient.id }}</td>
+                        </tr>
+                        <tr>
+                            <th>العمر:</th>
+                            <td>{{ ((today - patient.birth_date).days / 365.25) | int if patient.birth_date else 'غير محدد' }} سنة</td>
+                        </tr>
+                        <tr>
+                            <th>رقم الهاتف:</th>
+                            <td>{{ patient.phone or 'غير محدد' }}</td>
+                        </tr>
+                        <tr>
+                            <th>البريد الإلكتروني:</th>
+                            <td>{{ patient.email or 'غير محدد' }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">التاريخ الطبي</h5>
+                </div>
+                <div class="card-body">
+                    {{ patient.medical_history or 'لا يوجد تاريخ طبي مسجل' }}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">سجل الفحوصات</h5>
+                </div>
+                <div class="card-body">
+                    {% if patient.examinations %}
+                    <div class="table-responsive">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>نوع الفحص</th>
+                                    <th>الطبيب</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for examination in patient.examinations|sort(attribute='created_at', reverse=true) %}
+                                <tr>
+                                    <td>{{ examination.created_at | strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ examination.EXAMINATION_TYPES[examination.examination_type] }}</td>
+                                    <td>{{ examination.performer.name if examination.performer else 'غير محدد' }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if examination.status == 'completed' else 'warning' }}">
+                                            {{ 'مكتمل' if examination.status == 'completed' else 'قيد الانتظار' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('examinations.view', id=examination.id) }}" class="btn btn-info btn-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if examination.report_path %}
+                                        <a href="{{ url_for('examinations.download_report', id=examination.id) }}" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center">لا توجد فحوصات مسجلة</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function printRecord() {
+    window.print();
+}
+</script>
+{% endblock %}

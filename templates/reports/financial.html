@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- عنوان الصفحة -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="text-primary">التقارير المالية</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">الرئيسية</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">التقارير المالية</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-success" onclick="exportToExcel()">
+                <i class="fas fa-file-excel me-2"></i>تصدير إلى Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- فلاتر التقرير -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">من تاريخ</label>
+                            <input type="date" name="date_from" class="form-control" 
+                                   value="{{ request.args.get('date_from', '') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">إلى تاريخ</label>
+                            <input type="date" name="date_to" class="form-control" 
+                                   value="{{ request.args.get('date_to', '') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">نوع الفحص</label>
+                            <select name="examination_type" class="form-select">
+                                <option value="">الكل</option>
+                                {% for key, value in examination_types.items() %}
+                                <option value="{{ key }}" {{ 'selected' if request.args.get('examination_type') == key }}>
+                                    {{ value }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-2"></i>تطبيق الفلتر
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ملخص الإحصائيات -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">إجمالي الفواتير</h6>
+                    <h3 class="mb-0">{{ "%.2f"|format(stats.total_amount|default(0)) }} ريال</h3>
+                    <small>عدد الفواتير: {{ stats.total_invoices|default(0) }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">إجمالي المدفوعات</h6>
+                    <h3 class="mb-0">{{ "%.2f"|format(stats.total_payments|default(0)) }} ريال</h3>
+                    <small>عدد المدفوعات: {{ stats.total_payments_count|default(0) }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">إجمالي المبالغ المستحقة</h6>
+                    <h3 class="mb-0">{{ "%.2f"|format(stats.total_due|default(0)) }} ريال</h3>
+                    <small>عدد المبالغ المستحقة: {{ stats.total_due_count|default(0) }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">إجمالي المبالغ المتأخرة</h6>
+                    <h3 class="mb-0">{{ "%.2f"|format(stats.total_overdue|default(0)) }} ريال</h3>
+                    <small>عدد المبالغ المتأخرة: {{ stats.total_overdue_count|default(0) }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- جدول التقارير -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>رقم الفاتورة</th>
+                                <th>التاريخ</th>
+                                <th>المبلغ</th>
+                                <th>حالة الدفع</th>
+                                <th>نوع الفحص</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in reports %}
+                            <tr>
+                                <td>{{ report.invoice_number }}</td>
+                                <td>{{ report.date }}</td>
+                                <td>{{ "%.2f"|format(report.amount) }} ريال</td>
+                                <td>{{ report.payment_status }}</td>
+                                <td>{{ report.examination_type }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+<script>
+    function exportToExcel() {
+        // Implement logic to export the table to Excel
+        alert("This function will export the data to Excel.");
+    }
+</script>

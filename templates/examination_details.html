@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="text-primary">تفاصيل الفحص</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">الرئيسية</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('examinations') }}">الفحوصات</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">تفاصيل الفحص #{{ examination.id }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('edit_examination', id=examination.id) }}" class="btn btn-warning">
+                <i class="fas fa-edit me-2"></i>تعديل
+            </a>
+            {% if examination.status == 'pending' %}
+            <a href="{{ url_for('delete_examination', id=examination.id) }}" 
+               class="btn btn-danger"
+               onclick="return confirm('هل أنت متأكد من حذف هذا الفحص؟')">
+                <i class="fas fa-trash me-2"></i>حذف
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">معلومات الفحص</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>رقم الفحص:</strong></p>
+                            <p>{{ examination.id }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>نوع الفحص:</strong></p>
+                            <p>{{ examination_types[examination.examination_type] }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>المريض:</strong></p>
+                            <p><a href="{{ url_for('view_patient', id=examination.patient.id) }}">
+                                {{ examination.patient.name }}
+                            </a></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>الطبيب:</strong></p>
+                            <p>{{ examination.doctor.name }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>التكلفة:</strong></p>
+                            <p>{{ "%.2f"|format(examination.cost) }} ريال</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>الحالة:</strong></p>
+                            <p><span class="badge bg-{{ examination.status_color }}">
+                                {{ examination.status_display }}
+                            </span></p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <p class="mb-1"><strong>ملاحظات:</strong></p>
+                            <p>{{ examination.notes or 'لا توجد ملاحظات' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">الفواتير</h5>
+                </div>
+                <div class="card-body">
+                    {% if examination.invoices %}
+                    <div class="list-group">
+                        {% for invoice in examination.invoices %}
+                        <a href="{{ url_for('view_invoice', id=invoice.id) }}" 
+                           class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">فاتورة #{{ invoice.id }}</h6>
+                                <span class="badge bg-{{ invoice.status_color }}">
+                                    {{ invoice.status_display }}
+                                </span>
+                            </div>
+                            <p class="mb-1">المبلغ: {{ "%.2f"|format(invoice.amount) }} ريال</p>
+                            <small>المدفوع: {{ "%.2f"|format(invoice.paid_amount) }} ريال</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">لا توجد فواتير لهذا الفحص</p>
+                    {% endif %}
+                </div>
+                {% if examination.status != 'pending' %}
+                <div class="card-footer">
+                    <a href="{{ url_for('new_invoice', examination_id=examination.id) }}" 
+                       class="btn btn-primary w-100">
+                        <i class="fas fa-plus me-2"></i>إضافة فاتورة جديدة
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

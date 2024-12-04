@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col text-center">
+            <h1>مرحباً بك في نظام إدارة العيادة</h1>
+            <p class="lead">نظام متكامل لإدارة العيادات والمراكز الطبية</p>
+        </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-injured fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title">إدارة المرضى</h5>
+                    <p class="card-text">إدارة بيانات المرضى والسجلات الطبية</p>
+                    <a href="{{ url_for('patients.index') }}" class="btn btn-primary">إدارة المرضى</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-stethoscope fa-3x mb-3 text-info"></i>
+                    <h5 class="card-title">الفحوصات الطبية</h5>
+                    <p class="card-text">إدارة الفحوصات والتقارير الطبية</p>
+                    <a href="{{ url_for('examinations.index') }}" class="btn btn-info">إدارة الفحوصات</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-invoice-dollar fa-3x mb-3 text-success"></i>
+                    <h5 class="card-title">إدارة الفواتير</h5>
+                    <p class="card-text">إصدار وإدارة الفواتير والمدفوعات</p>
+                    <a href="{{ url_for('invoices') }}" class="btn btn-success">إدارة الفواتير</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if current_user.role == 'admin' %}
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-users-cog fa-3x mb-3 text-warning"></i>
+                    <h5 class="card-title">إدارة المستخدمين</h5>
+                    <p class="card-text">إدارة حسابات المستخدمين والصلاحيات</p>
+                    <a href="{{ url_for('users') }}" class="btn btn-warning">إدارة المستخدمين</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-3x mb-3 text-danger"></i>
+                    <h5 class="card-title">التقارير والإحصائيات</h5>
+                    <p class="card-text">عرض التقارير المالية والإحصائيات</p>
+                    <a href="{{ url_for('analytics_report') }}" class="btn btn-danger">عرض التقارير</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

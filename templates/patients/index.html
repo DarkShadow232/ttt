@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0 bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">المرضى</h4>
+                        <a href="{{ url_for('patients.create') }}" class="btn btn-light">
+                            <i class="fas fa-plus-circle"></i> إضافة مريض جديد
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0 table-striped table-hover">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="text-secondary text-lg">الاسم</th>
+                                    <th class="text-secondary text-lg">العمر</th>
+                                    <th class="text-secondary text-lg">رقم الجوال</th>
+                                    <th class="text-secondary text-lg">البريد الإلكتروني</th>
+                                    <th class="text-secondary text-lg">عدد الفحوصات</th>
+                                    <th class="text-secondary text-lg">آخر زيارة</th>
+                                    <th class="text-secondary text-lg">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for patient in patients %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('patients.view', id=patient.id) }}" class="text-primary fw-bold text-decoration-none">
+                                            {{ patient.name }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {% if patient.birth_date %}
+                                            <span class="text-dark">{{ ((today - patient.birth_date).days / 365.25) | int }} سنة</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if patient.phone %}
+                                            <span class="text-dark" dir="ltr">{{ patient.phone }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if patient.email %}
+                                            <span class="text-dark">{{ patient.email }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info text-white">{{ patient.examinations | length }}</span>
+                                    </td>
+                                    <td>
+                                        {% if patient.examinations %}
+                                            {% set last_exam = patient.examinations | sort(attribute='created_at', reverse=true) | first %}
+                                            <span class="text-dark">{{ last_exam.created_at | strftime('%Y-%m-%d') }}</span>
+                                        {% else %}
+                                            <span class="text-muted">لا يوجد</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('patients.view', id=patient.id) }}" class="btn btn-info btn-sm" title="عرض">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('patients.edit', id=patient.id) }}" class="btn btn-warning btn-sm" title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            {% if not patient.examinations %}
+                                            <button type="button" class="btn btn-danger btn-sm" title="حذف"
+                                                    onclick="confirmDelete('{{ patient.id }}', '{{ patient.name }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% else %}
+                                            <button type="button" class="btn btn-danger btn-sm" title="لا يمكن الحذف - يوجد فحوصات مرتبطة" disabled>
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        <i class="fas fa-user-slash fa-2x mb-2"></i>
+                                        <p class="mb-0">لا يوجد مرضى مسجلين حالياً</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal تأكيد الحذف -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من حذف المريض: <span id="patientName" class="fw-bold"></span>؟</p>
+                <p class="text-danger">هذا الإجراء لا يمكن التراجع عنه.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(patientId, patientName) {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    document.getElementById('patientName').textContent = patientName;
+    document.getElementById('deleteForm').action = "{{ url_for('patients.delete', id=0) }}".replace('0', patientId);
+    modal.show();
+}
+</script>
+{% endblock %}

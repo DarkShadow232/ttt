@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>قائمة الفحوصات</h2>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if examinations %}
+            <div class="table-responsive">
+                <table class="table align-items-center mb-0">
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>المريض</th>
+                            <th>نوع الفحص</th>
+                            <th>الطبيب</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for examination in examinations %}
+                        <tr>
+                            <td>{{ examination.created_at | strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <a href="{{ url_for('patients.medical_record', id=examination.patient_id) }}">
+                                    {{ examination.patient.name }}
+                                </a>
+                            </td>
+                            <td>{{ examination.EXAMINATION_TYPES[examination.examination_type] }}</td>
+                            <td>{{ examination.performer.name if examination.performer else 'غير محدد' }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if examination.status == 'completed' else 'warning' }}">
+                                    {{ 'مكتمل' if examination.status == 'completed' else 'قيد الانتظار' }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('examinations.view', id=examination.id) }}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if examination.report_path %}
+                                <a href="{{ url_for('examinations.download_report', id=examination.id) }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                                {% endif %}
+                                <a href="{{ url_for('examinations.edit', id=examination.id) }}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button onclick="deleteExamination({{ examination.id }})" class="btn btn-danger btn-sm" type="button">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center">لا توجد فحوصات مسجلة</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function deleteExamination(id) {
+    if (confirm('هل أنت متأكد من حذف هذا الفحص؟')) {
+        fetch(`/examinations/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert('حدث خطأ أثناء حذف الفحص');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

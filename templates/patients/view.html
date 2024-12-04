@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>{{ patient.name }}</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('patients.edit', id=patient.id) }}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> تعديل
+            </a>
+            <a href="{{ url_for('patients.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-right"></i> عودة
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">معلومات المريض</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th>رقم الملف:</th>
+                            <td>{{ patient.id }}</td>
+                        </tr>
+                        <tr>
+                            <th>العمر:</th>
+                            <td>{{ ((today - patient.birth_date).days / 365.25) | int if patient.birth_date else 'غير محدد' }} سنة</td>
+                        </tr>
+                        <tr>
+                            <th>رقم الهاتف:</th>
+                            <td>{{ patient.phone or 'غير محدد' }}</td>
+                        </tr>
+                        <tr>
+                            <th>البريد الإلكتروني:</th>
+                            <td>{{ patient.email or 'غير محدد' }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">التاريخ الطبي</h5>
+                </div>
+                <div class="card-body">
+                    {{ patient.medical_history or 'لا يوجد تاريخ طبي مسجل' }}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">سجل الفحوصات</h5>
+                    <a href="{{ url_for('examinations.new', patient_id=patient.id) }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> فحص جديد
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if patient.examinations %}
+                    <div class="table-responsive">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>نوع الفحص</th>
+                                    <th>الطبيب</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for examination in patient.examinations|sort(attribute='created_at', reverse=true) %}
+                                <tr>
+                                    <td>{{ examination.created_at | strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ examination.EXAMINATION_TYPES[examination.examination_type] }}</td>
+                                    <td>{{ examination.performer.name if examination.performer else 'غير محدد' }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if examination.status == 'completed' else 'warning' }}">
+                                            {{ 'مكتمل' if examination.status == 'completed' else 'قيد الانتظار' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('examinations.view', id=examination.id) }}" class="btn btn-info btn-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if examination.report_path %}
+                                        <a href="{{ url_for('examinations.download_report', id=examination.id) }}" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center">لا توجد فحوصات مسجلة</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">سجل الفواتير</h5>
+                    <a href="{{ url_for('invoices.new', patient_id=patient.id) }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus"></i> فاتورة جديدة
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if patient.invoices %}
+                    <div class="table-responsive">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th>رقم الفاتورة</th>
+                                    <th>التاريخ</th>
+                                    <th>المبلغ</th>
+                                    <th>المدفوع</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for invoice in patient.invoices|sort(attribute='created_at', reverse=true) %}
+                                <tr>
+                                    <td>#{{ invoice.id }}</td>
+                                    <td>{{ invoice.created_at | strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ "%.2f"|format(invoice.total_amount) }}</td>
+                                    <td>{{ "%.2f"|format(invoice.paid_amount) }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if invoice.is_paid else 'warning' }}">
+                                            {{ 'مدفوعة' if invoice.is_paid else 'غير مدفوعة' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('invoices.view', id=invoice.id) }}" class="btn btn-info btn-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('invoices.print', id=invoice.id) }}" class="btn btn-secondary btn-sm">
+                                            <i class="fas fa-print"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center">لا توجد فواتير مسجلة</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

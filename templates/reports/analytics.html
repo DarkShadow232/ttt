@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- عنوان الصفحة -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="text-primary">التحليلات المالية المتقدمة</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">الرئيسية</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">التحليلات المالية</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- فلاتر التقرير -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">من تاريخ</label>
+                            <input type="date" name="date_from" class="form-control" 
+                                   value="{{ request.args.get('date_from', '') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">إلى تاريخ</label>
+                            <input type="date" name="date_to" class="form-control" 
+                                   value="{{ request.args.get('date_to', '') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">نوع التحليل</label>
+                            <select name="analysis_type" class="form-select">
+                                <option value="daily" {% if request.args.get('analysis_type') == 'daily' %}selected{% endif %}>يومي</option>
+                                <option value="weekly" {% if request.args.get('analysis_type') == 'weekly' %}selected{% endif %}>أسبوعي</option>
+                                <option value="monthly" {% if request.args.get('analysis_type') == 'monthly' or not request.args.get('analysis_type') %}selected{% endif %}>شهري</option>
+                                <option value="quarterly" {% if request.args.get('analysis_type') == 'quarterly' %}selected{% endif %}>ربع سنوي</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-2"></i>تحليل
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مؤشرات الأداء الرئيسية -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">مؤشرات الأداء الرئيسية (KPIs)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="border rounded p-3 text-center">
+                                <h6>متوسط قيمة الفاتورة</h6>
+                                <h3 class="text-primary">{{ "%.2f"|format(kpis.avg_invoice_amount|default(0)) }} ريال</h3>
+                                <small class="text-{{ 'success' if kpis.avg_invoice_amount > 100 else 'warning' if kpis.avg_invoice_amount > 50 else 'danger' }}">
+                                    {{ "%.2f"|format(kpis.avg_invoice_amount|default(0)) }} ريال
+                                </small>
+                            </div>
+                        </div>
+                        <!-- Add more KPIs as needed -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">موعد جديد</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('new_appointment') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="patient_search" class="form-label">بحث عن المريض</label>
+                                <div class="input-group">
+                                    <input type="text" id="patient_search" class="form-control" 
+                                           placeholder="ابحث باسم المريض أو رقم الهاتف">
+                                    <button type="button" class="btn btn-primary" onclick="searchPatient()">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                                <div id="patient_results" class="list-group mt-2" style="display: none;"></div>
+                                {{ form.patient_id(type="hidden") }}
+                                <div id="selected_patient" class="mt-2"></div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="date" class="form-label">التاريخ</label>
+                                {{ form.date(class="form-control", type="date") }}
+                                {% if form.date.errors %}
+                                    {% for error in form.date.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="time" class="form-label">الوقت</label>
+                                {{ form.time(class="form-control", type="time") }}
+                                {% if form.time.errors %}
+                                    {% for error in form.time.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="examination_type" class="form-label">نوع الفحص</label>
+                            {{ form.examination_type(class="form-select") }}
+                            {% if form.examination_type.errors %}
+                                {% for error in form.examination_type.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات</label>
+                            {{ form.notes(class="form-control", rows="3") }}
+                            {% if form.notes.errors %}
+                                {% for error in form.notes.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">حفظ الموعد</button>
+                            <a href="{{ url_for('appointments') }}" class="btn btn-secondary">إلغاء</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let searchTimeout;
+
+function searchPatient() {
+    const searchTerm = document.getElementById('patient_search').value;
+    if (searchTerm.length < 2) return;
+
+    fetch(`/api/patients/search?q=${encodeURIComponent(searchTerm)}`)
+        .then(response => response.json())
+        .then(data => {
+            const resultsDiv = document.getElementById('patient_results');
+            resultsDiv.innerHTML = '';
+            resultsDiv.style.display = 'block';
+
+            data.forEach(patient => {
+                const item = document.createElement('a');
+                item.href = '#';
+                item.className = 'list-group-item list-group-item-action';
+                item.innerHTML = `${patient.name} - ${patient.phone}`;
+                item.onclick = (e) => {
+                    e.preventDefault();
+                    selectPatient(patient);
+                };
+                resultsDiv.appendChild(item);
+            });
+        });
+}
+
+function selectPatient(patient) {
+    document.getElementById('patient_id').value = patient.id;
+    document.getElementById('patient_search').value = patient.name;
+    document.getElementById('patient_results').style.display = 'none';
+    
+    const selectedDiv = document.getElementById('selected_patient');
+    selectedDiv.innerHTML = `
+        <div class="alert alert-info">
+            <strong>المريض المحدد:</strong> ${patient.name}<br>
+            <strong>رقم الهاتف:</strong> ${patient.phone}
+        </div>
+    `;
+}
+
+document.getElementById('patient_search').addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(searchPatient, 500);
+});
+</script>
+{% endblock %}

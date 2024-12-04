@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>فاتورة جديدة</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.csrf_token }}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">المريض</label>
+                                {{ form.patient_id(class="form-select") }}
+                                {% if form.patient_id.errors %}
+                                    {% for error in form.patient_id.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">الفحص</label>
+                                {{ form.examination_id(class="form-select") }}
+                                {% if form.examination_id.errors %}
+                                    {% for error in form.examination_id.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">المبلغ</label>
+                                {{ form.amount(class="form-control") }}
+                                {% if form.amount.errors %}
+                                    {% for error in form.amount.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">الخصم</label>
+                                {{ form.discount(class="form-control") }}
+                                {% if form.discount.errors %}
+                                    {% for error in form.discount.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">ملاحظات</label>
+                            {{ form.notes(class="form-control", rows="3") }}
+                            {% if form.notes.errors %}
+                                {% for error in form.notes.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col">
+                                {{ form.submit(class="btn btn-primary") }}
+                                <a href="{{ url_for('invoices') }}" class="btn btn-secondary">إلغاء</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.getElementById('patient_id').addEventListener('change', function() {
+    var patientId = this.value;
+    fetch('/patient/' + patientId + '/examinations')
+        .then(response => response.json())
+        .then(data => {
+            var examinationSelect = document.getElementById('examination_id');
+            examinationSelect.innerHTML = '';
+            data.forEach(function(examination) {
+                var option = new Option(examination.text, examination.id);
+                examinationSelect.add(option);
+            });
+        });
+});
+</script>
+{% endblock %}
+
+{% endblock %}

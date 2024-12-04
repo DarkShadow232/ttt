@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h4>تعديل الفحص</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.csrf_token }}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    {{ form.examination_type.label(class="form-control-label") }}
+                                    {{ form.examination_type(class="form-control") }}
+                                    {% if form.examination_type.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.examination_type.errors %}
+                                        <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    {{ form.report_file.label(class="form-control-label") }}
+                                    {{ form.report_file(class="form-control") }}
+                                    {% if form.report_file.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.report_file.errors %}
+                                        <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    {% if examination.report_path %}
+                                    <small class="text-muted">الملف الحالي: {{ examination.report_path }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    {{ form.result.label(class="form-control-label") }}
+                                    {{ form.result(class="form-control", rows=4) }}
+                                    {% if form.result.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.result.errors %}
+                                        <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group mb-3">
+                                    {{ form.recommendations.label(class="form-control-label") }}
+                                    {{ form.recommendations(class="form-control", rows=4) }}
+                                    {% if form.recommendations.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.recommendations.errors %}
+                                        <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 text-end">
+                                <a href="{{ url_for('examinations.view', id=examination.id) }}" class="btn btn-secondary">إلغاء</a>
+                                {{ form.submit(class="btn btn-primary") }}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
